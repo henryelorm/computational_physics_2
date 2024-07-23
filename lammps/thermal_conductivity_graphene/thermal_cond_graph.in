@@ -1,0 +1,34 @@
+# --------------------- INITIALIZATION --------------------------
+units          metal    # others include, ij, si, cgs, real, micro, nano, etc
+
+# ----------------------SETUP SIMULATION BOX and ATOMS --------------------
+atom_style     atomic             # amoeba or angle or atomic or body or bond or charge or dielectric or dipole or dpd etc.
+processors * * *                  # specify how processors are mapped as a regular 3d grid to the global simulation box. 
+boundary       p p p              # x y z = p (periodic), = f (is non-periodic and fixed), s = non-periodic and shrink-wrapped, etc
+
+read_data graphene.dat
+
+
+# ------------ FORCE FIELDS (INTERATOMIC POTENTIAL) -----------------------
+pair_style tersoff  
+pair_coeff * * SiC.tersoff C
+   
+
+
+# ------------- OUTPUT  -------------------------------------------------
+thermo 100
+thermo_style custom step temp etotal
+
+
+shell mkdir -p output  # create directory if it does not exist
+dump henry all atom 100 output/graphene_*.lammpstrj
+dump_modify henry sort id
+
+# ------------- ACTIONS  ------------------------------
+# minimize 1.0e-4  1.0e-4 100000 100000
+
+
+# >>>>>>>>>>> FIRST RUN <<<<<<<<<<<<<<<<<<<<<<<<
+fix 1 all nvt temp 300 300 0.1
+run 10000
+unfix 1

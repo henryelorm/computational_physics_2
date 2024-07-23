@@ -1,0 +1,53 @@
+# --------------------- INITIALIZATION --------------------------
+units          metal    # others include, ij, si, cgs, real, micro, nano, etc
+
+
+# --------------------- VARIABLES -------------------------------
+# This commands assigns one or more strings to a variable name for evaluation later in the input script or during a simulation
+variable latparam equal 3.61   
+variable material string Cu    
+
+
+# ----------------------SETUP SIMULATION BOX and ATOMS --------------------
+atom_style     atomic             # amoeba or angle or atomic or body or bond or charge or dielectric or dipole or dpd etc.
+lattice fcc ${latparam}           # set of points in space, determined by a unit cell with basis atoms
+dimension      3                  # dimension we are considering,  by default 3,  (2 also exist)
+region box block 0 10 0 10 0 10   # creating a geometric region in space
+boundary       p p p              # x y z = p (periodic), = f (is non-periodic and fixed), s = non-periodic and shrink-wrapped, etc
+
+create_box 1 box                  # creating a box region
+create_atoms 1 region box
+
+
+
+# ------------ FORCE FIELDS (INTERATOMIC POTENTIAL) -----------------------
+pair_style meam                                                           # pair potentials are defined between pairs of atoms that are within a cutoff distance 
+pair_coeff * * library.meam ${material} ${material}.meam ${material}      # specify the pairwise force field coefficients for one or more pairs of atom types
+
+
+# ------------- Operations and diagnostics ------------------------------
+
+compute peratom all pe/atom
+compute virial all stress/atom NULL
+
+
+# ------------- SETTINGS  -------------------------------------------------
+reset_timestep 0
+timestep 0
+
+
+# ------------- OUTPUT  -------------------------------------------------
+
+thermo 100
+thermo_style custom step lx ly lz press pxx pyy pzz pe temp
+dump 2 all custom 1000 md.lammpstrj id type x y z
+
+# ------------- ACTIONS  ------------------------------
+# minimize 1.0e-4  1.0e-4 100000 100000
+
+
+# >>>>>>>>>>> FIRST RUN <<<<<<<<<<<<<<<<<<<<<<<<
+fix 1 all npt temp 300 300 1 iso 0 0 1 drag 1
+velocity all create 300 12345 mom yes rot no
+run 4000
+unfix 1

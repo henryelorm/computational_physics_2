@@ -1,0 +1,89 @@
+LAMMPS (2 Aug 2023 - Update 3)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+Loaded 1 plugins from C:\Users\Acer\AppData\Local\LAMMPS 64-bit 2Aug2023\plugins
+# --------------------- INITIALIZATION --------------------------
+units          real    # others include, ij, si, cgs, real, micro, nano, etc
+
+# ----------------------SETUP SIMULATION BOX and ATOMS --------------------
+atom_style     charge             # amoeba or angle or atomic or body or bond or charge or dielectric or dipole or dpd etc.
+processors * * *                  # specify how processors are mapped as a regular 3d grid to the global simulation box.
+dimension      3                  # dimension we are considering,  by default 3,  (2 also exist)
+boundary       p p p              # x y z = p (periodic), = f (is non-periodic and fixed), s = non-periodic and shrink-wrapped, etc
+
+read_data glass.dat
+Reading data file ...
+  orthogonal box = (0 0 0) to (10 10 10)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  224 atoms
+  read_data CPU = 0.002 seconds
+
+
+# ------------ FORCE FIELDS (INTERATOMIC POTENTIAL) -----------------------
+# using BKS potential
+pair_style buck/coul/long 5.5 10.0
+pair_coeff 1 1 0.0        1.0       0.0               # Si-Si,
+pair_coeff 1 2 414612.50  0.20520   3075.278          # Si-O
+pair_coeff 2 2 31982.360  0.36231   4030.1136         # O-O
+
+kspace_style ewald 1.0e-10            # define a long-range solver for LAMMPS to use each timestep to compute long-range Coulombic interactions or long-range equation interactions
+neighbor           2.0 bin            # this command sets parameters that affect the building of pairwise neighbor lists
+neigh_modify       every 1 check yes  # sets parameters that affect the building and use of pairwise neighbor lists
+timestep           1.0
+
+# ------------- Operations and diagnostics ------------------------------
+
+compute peratom all pe/atom
+compute peall   all pe
+compute temperature all temp
+
+# ------------- OUTPUT  -------------------------------------------------
+thermo 100
+thermo_style custom step temp  pe press vol lx density
+dump 2 all custom 1000 md.lammpstrj id type x y z
+
+# ------------- ACTIONS  ------------------------------
+# minimize 1.0e-4  1.0e-4 100000 100000
+
+
+# >>>>>>>>>>> FIRST RUN <<<<<<<<<<<<<<<<<<<<<<<<
+fix henry all nvt temp 5000.0 5000.0 100
+run 200000
+Ewald initialization ...
+WARNING: System is not charge neutral, net charge = -153.6 (src/kspace.cpp:327)
+  using 12-bit tables for long-range coulomb (src/kspace.cpp:342)
+WARNING: For better accuracy use 'pair_modify table 0' (src/kspace.cpp:365)
+  G vector (1/distance) = 0.4747733
+  estimated absolute RMS force accuracy = 0.00017993786
+  estimated relative force accuracy = 5.4187752e-07
+  KSpace vectors: actual max1d max3d = 1054 8 2456
+                  kxmax kymax kzmax  = 8 8 8
+Generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 12
+  ghost atom cutoff = 12
+  binsize = 6, bins = 2 2 2
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair buck/coul/long, perpetual
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton
+      stencil: half/bin/3d
+      bin: standard
+Per MPI rank memory allocation (min/avg/max) = 17.49 | 17.49 | 17.49 Mbytes
+   Step          Temp          PotEng         Press          Volume           Lx          Density    
+         0   0             -94028.244      1788468.8      1000           10             6.5932163    
+       100   2.1098584e-22 -94028.244      1788468.8      1000           10             6.5932163    
+       200   1.075339e-14  -94028.244      1788468.8      1000           10             6.5932163    
+       300   5.3004453e-11 -94028.244      1788468.8      1000           10             6.5932163    
+       400   7.470859e-09  -94028.244      1788468.8      1000           10             6.5932163    
+       500   7.6200094e-06 -94028.244      1788468.9      1000           10             6.5932163    
+       600   0.0079766559  -94028.247      1788475.9      1000           10             6.5932163    
+       700   8.3808683     -94033.117      1794804.9      1000           10             6.5932163    
+       800   1068.715      -94545.131      2487048.6      1000           10             6.5932163    
+       900   2384.9747     -94494.488      2720450.2      1000           10             6.5932163    
+      1000   4453.447      -94434.316      2868879        1000           10             6.5932163    
+ERROR: Lost atoms: original 224 current 222 (src/thermo.cpp:488)
+Last command: run 200000
