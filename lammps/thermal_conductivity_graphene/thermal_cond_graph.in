@@ -20,7 +20,7 @@ thermo 100
 thermo_style custom step temp etotal
 
 
-shell mkdir -p output  # create directory if it does not exist
+shell mkdir output  # create directory if it does not exist
 dump henry all atom 100 output/graphene_*.lammpstrj
 dump_modify henry sort id
 
